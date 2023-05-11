@@ -15,11 +15,23 @@ class Director(models.Model):
         return self.name
 
 
+class Genre(models.Model):
+    name = models.CharField(max_length=32)
+
+
 class Movie(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True)
     duration = models.DurationField()
-    director = models.ForeignKey(Director, on_delete=models.PROTECT)
+    director = models.ForeignKey(Director, on_delete=models.CASCADE,)
+    genres = models.ManyToManyField(Genre, blank=True)
+
+    @property
+    def director_name(self):
+        try:
+            return self.director.name
+        except:
+            return "Нет категорий"
 
     @property
     def rating(self):
