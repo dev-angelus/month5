@@ -1,18 +1,18 @@
 from random import choices
 
-from rest_framework.decorators import api_view
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .models import ConfirmCode
 from .serializers import UserLoginValidateSerializer, UserCreateValidateSerializer, ConfirmCodeValidateSerializer
 
 
-@api_view(['POST'])
-def authorization_api_view(request):
+class AuthorizationAPIView(APIView):
+    def post(self, request):
         serializer = UserLoginValidateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = authenticate(**serializer.validated_data)
@@ -22,8 +22,8 @@ def authorization_api_view(request):
         return Response(status=status.HTTP_401_UNAUTHORIZED)
 
 
-@api_view(['POST'])
-def registration_api_view(request):
+class RegistrationAPIView(APIView):
+    def post(self, request):
         serializer = UserCreateValidateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         username = serializer.validated_data.get('username')
@@ -36,8 +36,8 @@ def registration_api_view(request):
                               'code': code.code})
 
 
-@api_view(['POST'])
-def confirm_api_view(request):
+class ConfirmAPIView(APIView):
+    def post(self, request):
         serializer = ConfirmCodeValidateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
