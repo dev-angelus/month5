@@ -36,7 +36,10 @@ class Movie(models.Model):
     @property
     def rating(self):
         stars_list = [review.stars for review in self.reviews.all()]
-        return round(sum(stars_list) / len(stars_list), 2)
+        if len(stars_list) > 0:
+            return round(sum(stars_list) / len(stars_list), 2)
+        else:
+            return 0.0
 
     @property
     def reviews_text(self):
