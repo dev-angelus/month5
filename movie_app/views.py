@@ -1,10 +1,9 @@
 from datetime import timedelta
 
 from rest_framework import status
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
 from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
 
 from .models import Director, Movie, Review
 from .serializers import DirectorSerializer, MovieSerializer, ReviewSerializer, \
@@ -16,12 +15,27 @@ class DirectorListAPIView(ListCreateAPIView):
     serializer_class = DirectorSerializer
     pagination_class = PageNumberPagination
 
+    def post(self, request, *args, **kwargs):
+        serializer = DirectorValidateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={'errors': serializer.errors},
+                            status=status.HTTP_406_NOT_ACCEPTABLE)
+        name = serializer.validated_data.get('name')
+        director_obj = Director.objects.create(name=name)
+        return Response(data=DirectorSerializer(director_obj).data)
+
 
 class DirectorDetailAPIView(RetrieveUpdateDestroyAPIView):
     queryset = Director.objects.all()
     serializer_class = DirectorSerializer
     pagination_class = PageNumberPagination
     lookup_field = 'id'
+
+    def put(self, request, *args, **kwargs):
+        director_obj = Director.objects.get(id=id)
+        serializer = DirectorValidateSerializer(data=request.data)
+        director_obj.name = serializer.validated_data.get('name')
+        return Response(data=DirectorSerializer(director_obj).data)
 
 
 class MovieListAPIView(ListCreateAPIView):
@@ -65,7 +79,7 @@ class MovieDetailListApiView(RetrieveUpdateDestroyAPIView):
         duration_string = request.data.get('duration')
         duration_parts = duration_string.split(':')
         movie_obj.duration = timedelta(hours=int(duration_parts[0]), minutes=int(duration_parts[1]),
-                                   seconds=int(duration_parts[2]))
+                                       seconds=int(duration_parts[2]))
         movie_obj.director_id = serializer.validated_data.get('director_id')
         movie_obj.genres.set(serializer.validated_data.get('genres'))
         movie_obj.save()
@@ -83,6 +97,17 @@ class ReviewListApiView(ListCreateAPIView):
     serializer_class = ReviewSerializer
     pagination_class = PageNumberPagination
 
+    def post(self, request, *args, **kwargs):
+        serializer = ReviewValidateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={'errors': serializer.errors},
+                            status=status.HTTP_406_NOT_ACCEPTABLE)
+        text = serializer.validated_data.get('text')
+        stars = serializer.validated_data.get('stars')
+        movie_id = serializer.validated_data.get('movie_id')
+        review_obj = Director.objects.create(text=text, stars=stars, movie_id=movie_id)
+        return Response(data=ReviewSerializer(review_obj).data)
+
 
 class ReviewDetailListApiView(RetrieveUpdateDestroyAPIView):
     queryset = Review.objects.all()
@@ -90,5 +115,10 @@ class ReviewDetailListApiView(RetrieveUpdateDestroyAPIView):
     pagination_class = PageNumberPagination
     lookup_field = 'id'
 
-
-
+    def put(self, request, *args, **kwargs):
+        review_obj = Review.objects.get(id=id)
+        serializer = ReviewValidateSerializer(data=request.data)
+        review_obj.text = serializer.validated_data.get('text')
+        review_obj.stars = serializer.validated_data.get('stars')
+        review_obj.movie_id = serializer.validated_data.get('movie_id')
+        return Response(data=DirectorSerializer(review_obj).data)
